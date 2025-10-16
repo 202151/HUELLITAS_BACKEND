@@ -9,6 +9,8 @@ use App\Http\Controllers\Api\ServiceController;
 use App\Http\Controllers\Api\AppointmentController;
 use App\Http\Controllers\Api\MedicalRecordController;
 use App\Http\Controllers\Api\VaccinationController;
+use App\Http\Controllers\Api\ReportController;
+use App\Http\Controllers\Api\ActivityLogController;
 
 Route::group([
     'middleware' => 'api',
@@ -28,6 +30,19 @@ Route::middleware(['auth:api', 'log.activity'])->group(function () {
     Route::apiResource('appointments', AppointmentController::class);
     Route::apiResource('medical-records', MedicalRecordController::class);
     Route::apiResource('vaccinations', VaccinationController::class);
+    
+    // Rutas para reportes
+    Route::prefix('reports')->group(function () {
+        Route::get('appointments', [ReportController::class, 'appointmentsReport']);
+        Route::get('owners', [ReportController::class, 'ownersReport']);
+        Route::get('pets', [ReportController::class, 'petsReport']);
+        Route::get('medical-records', [ReportController::class, 'medicalRecordsReport']);
+        Route::get('vaccinations', [ReportController::class, 'vaccinationsReport']);
+        Route::get('services', [ReportController::class, 'servicesReport']);
+    });
+    
+    // Rutas para logs de actividad
+    Route::apiResource('activity-logs', ActivityLogController::class)->only(['index', 'show']);
     
     Route::get('/user', function (Request $request) {
         return $request->user();

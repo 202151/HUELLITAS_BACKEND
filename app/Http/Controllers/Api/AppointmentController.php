@@ -13,7 +13,6 @@ class AppointmentController extends Controller
     {
         $appointments = Appointment::with(['pet.owner', 'service', 'veterinarian', 'receptionist'])
                                   ->orderBy('appointment_date', 'desc')
-                                  ->orderBy('appointment_time', 'desc')
                                   ->get();
         return response()->json($appointments);
     }
@@ -26,10 +25,10 @@ class AppointmentController extends Controller
             'veterinarian_id' => 'required|exists:users,id',
             'receptionist_id' => 'nullable|exists:users,id',
             'appointment_date' => 'required|date|after_or_equal:today',
-            'appointment_time' => 'required|date_format:H:i',
+            'duration_minutes' => 'required|integer|min:1',
             'reason' => 'required|string',
             'notes' => 'nullable|string',
-            'status' => 'required|in:scheduled,confirmed,in_progress,completed,cancelled',
+            'status' => 'required|in:programada,confirmada,en_curso,completada,cancelada,no_asistio',
             'total_amount' => 'nullable|numeric|min:0',
         ]);
 
@@ -58,10 +57,10 @@ class AppointmentController extends Controller
             'veterinarian_id' => 'sometimes|required|exists:users,id',
             'receptionist_id' => 'nullable|exists:users,id',
             'appointment_date' => 'sometimes|required|date',
-            'appointment_time' => 'sometimes|required|date_format:H:i',
+            'duration_minutes' => 'sometimes|required|integer|min:1',
             'reason' => 'sometimes|required|string',
             'notes' => 'nullable|string',
-            'status' => 'sometimes|required|in:scheduled,confirmed,in_progress,completed,cancelled',
+            'status' => 'sometimes|required|in:programada,confirmada,en_curso,completada,cancelada,no_asistio',
             'total_amount' => 'nullable|numeric|min:0',
         ]);
 
@@ -76,7 +75,7 @@ class AppointmentController extends Controller
     public function destroy($id)
     {
         $appointment = Appointment::findOrFail($id);
-        $appointment->update(['status' => 'cancelled']);
+        $appointment->update(['status' => 'cancelada']);
         return response()->json(['message' => 'Appointment cancelled successfully']);
     }
 }
