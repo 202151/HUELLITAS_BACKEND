@@ -1,0 +1,35 @@
+<?php
+
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\OwnerController;
+use App\Http\Controllers\Api\PetController;
+use App\Http\Controllers\Api\ServiceController;
+use App\Http\Controllers\Api\AppointmentController;
+use App\Http\Controllers\Api\MedicalRecordController;
+use App\Http\Controllers\Api\VaccinationController;
+
+Route::group([
+    'middleware' => 'api',
+    'prefix' => 'auth'
+], function ($router) {
+    Route::post('login', [AuthController::class, 'login']);
+    Route::post('register', [AuthController::class, 'register']);
+    Route::post('logout', [AuthController::class, 'logout']);
+    Route::post('refresh', [AuthController::class, 'refresh']);
+    Route::get('user-profile', [AuthController::class, 'userProfile']);
+});
+
+Route::middleware(['auth:api', 'log.activity'])->group(function () {
+    Route::apiResource('owners', OwnerController::class);
+    Route::apiResource('pets', PetController::class);
+    Route::apiResource('services', ServiceController::class);
+    Route::apiResource('appointments', AppointmentController::class);
+    Route::apiResource('medical-records', MedicalRecordController::class);
+    Route::apiResource('vaccinations', VaccinationController::class);
+    
+    Route::get('/user', function (Request $request) {
+        return $request->user();
+    });
+});
