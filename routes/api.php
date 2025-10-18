@@ -12,6 +12,7 @@ use App\Http\Controllers\Api\VaccinationController;
 use App\Http\Controllers\Api\ReportController;
 use App\Http\Controllers\Api\ActivityLogController;
 use App\Http\Controllers\MascotaController;
+use App\Http\Controllers\VacunaController;
 
 Route::group([
     'middleware' => 'api',
@@ -52,9 +53,47 @@ Route::middleware(['auth:api', 'log.activity'])->group(function () {
 
 //rutas para el crud de mascotas 
 Route::prefix('mascotas')->group(function () {
-    Route::get('/', [MascotaController::class, 'index']);
-    Route::post('/', [MascotaController::class, 'store']);
-    Route::get('/{id}', [MascotaController::class, 'show']);
-    Route::put('/{id}', [MascotaController::class, 'update']);
-    Route::delete('/{id}', [MascotaController::class, 'destroy']);
+    Route::get('index', [MascotaController::class, 'index']);
+    Route::post('store', [MascotaController::class, 'store']);
+    Route::get('show{id}', [MascotaController::class, 'show']);
+    Route::put('update{id}', [MascotaController::class, 'update']);
+    Route::delete('destroy{id}', [MascotaController::class, 'destroy']);
+});
+
+//rutas para el crud de vacunas
+
+Route::prefix('vacunas')->group(function () {
+    
+    // Estadísticas generales
+    Route::get('estadisticas', [VacunaController::class, 'estadisticas']);
+    // GET /api/vacunas/estadisticas
+    // Vacunas próximas a vencer
+    Route::get('proximas', [VacunaController::class, 'proximasAVencer']);
+    // GET /api/vacunas/proximas
+    // Vacunas vencidas
+    Route::get('vencidas', [VacunaController::class, 'vencidas']);
+    // GET /api/vacunas/vencidas
+    // Historial de vacunas por mascota
+    Route::get('mascota/{idMascota}', [VacunaController::class, 'historialMascota']);
+    // GET /api/vacunas/mascota/1
+    
+    // Listar todas las vacunas (con filtros opcionales)
+    Route::get('/', [VacunaController::class, 'index']);
+    // Crear nueva vacuna
+    Route::post('/', [VacunaController::class, 'store']);
+    // POST /api/vacunas
+    // Ver una vacuna específica
+    Route::get('/{id}', [VacunaController::class, 'show']);
+    // GET /api/vacunas/1
+    // Actualizar vacuna
+    Route::put('/{id}', [VacunaController::class, 'update']);
+    // PUT /api/vacunas/1
+    Route::patch('/{id}', [VacunaController::class, 'update']);
+    // PATCH /api/vacunas/1
+    // Eliminar vacuna
+    Route::delete('/{id}', [VacunaController::class, 'destroy']);
+    // DELETE /api/vacunas/1
+    Route::post('/{id}/aplicar-dosis', [VacunaController::class, 'aplicarProximaDosis']);
+    // POST /api/vacunas/1/aplicar-dosis
+    
 });
