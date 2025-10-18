@@ -11,6 +11,7 @@ use App\Http\Controllers\Api\MedicalRecordController;
 use App\Http\Controllers\Api\VaccinationController;
 use App\Http\Controllers\Api\ReportController;
 use App\Http\Controllers\Api\ActivityLogController;
+use App\Http\Controllers\MascotaController;
 
 Route::group([
     'middleware' => 'api',
@@ -47,4 +48,13 @@ Route::middleware(['auth:api', 'log.activity'])->group(function () {
     Route::get('/user', function (Request $request) {
         return $request->user();
     });
+});
+
+//rutas para el crud de mascotas 
+Route::prefix('mascotas')->group(function () {
+    Route::get('/', [MascotaController::class, 'index']);
+    Route::post('/', [MascotaController::class, 'store']);
+    Route::get('/{id}', [MascotaController::class, 'show']);
+    Route::put('/{id}', [MascotaController::class, 'update']);
+    Route::delete('/{id}', [MascotaController::class, 'destroy']);
 });
