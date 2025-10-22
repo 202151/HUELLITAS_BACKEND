@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\agendacitasController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\AuthController;
@@ -11,6 +12,10 @@ use App\Http\Controllers\Api\MedicalRecordController;
 use App\Http\Controllers\Api\VaccinationController;
 use App\Http\Controllers\Api\ReportController;
 use App\Http\Controllers\Api\ActivityLogController;
+
+
+//Api para agendar citas
+Route::post('/Agendar_cita', [agendacitasController::class, 'agendarCita']);
 
 Route::group([
     'middleware' => 'api',
