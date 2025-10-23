@@ -16,6 +16,10 @@ use App\Http\Controllers\Api\ActivityLogController;
 
 //Api para agendar citas
 Route::post('/Agendar_cita', [agendacitasController::class, 'agendarCita']);
+//Api para obtener la lista de citas mas recientes
+Route::get(uri: '/obtener_citas', action: [agendacitasController::class, 'obtenerCitas']);
+//Api para obtener citas por filtros
+Route::get(uri: '/obtener_citas_filtos', action: [agendacitasController::class, 'obtenerCitasFiltradas']);
 
 Route::group([
     'middleware' => 'api',
