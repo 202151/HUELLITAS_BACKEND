@@ -11,6 +11,7 @@ use App\Http\Controllers\Api\MedicalRecordController;
 use App\Http\Controllers\Api\VaccinationController;
 use App\Http\Controllers\Api\ReportController;
 use App\Http\Controllers\Api\ActivityLogController;
+use App\Http\Controllers\DesparasitacionController;
 
 Route::group([
     'middleware' => 'api',
@@ -46,5 +47,22 @@ Route::middleware(['auth:api', 'log.activity'])->group(function () {
     
     Route::get('/user', function (Request $request) {
         return $request->user();
+    
+
+            // Listar todas las desparasitaciones
+        Route::get('/desparasitaciones', [DesparasitacionController::class, 'Lista']);
+
+        // Mostrar una sola desparasitación por ID
+        Route::get('/desparasitaciones/{id}', [DesparasitacionController::class, 'Muestra']);
+
+        // Crear una nueva desparasitación
+        Route::post('/desparasitaciones', [DesparasitacionController::class, 'Crear']);
+
+        // Actualizar un registro existente
+        Route::put('/desparasitaciones/{id}', [DesparasitacionController::class, 'Actualizar']);
+
+        // Eliminar un registro
+        Route::post('/desparasitaciones/eliminar/{id}', [DesparasitacionController::class, 'Eliminar']);
+
     });
 });
