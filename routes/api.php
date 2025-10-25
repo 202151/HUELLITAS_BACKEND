@@ -12,6 +12,7 @@ use App\Http\Controllers\Api\VaccinationController;
 use App\Http\Controllers\Api\ReportController;
 use App\Http\Controllers\Api\ActivityLogController;
 use App\Http\Controllers\DesparasitacionController;
+use App\Http\Controllers\UsuarioController;
 
 Route::group([
     'middleware' => 'api',
@@ -47,7 +48,13 @@ Route::middleware(['auth:api', 'log.activity'])->group(function () {
     
     Route::get('/user', function (Request $request) {
         return $request->user();
+        //login
     
+        Route::post('/login', [UsuarioController::class, 'login']);
+        Route::post('/registrar', [UsuarioController::class, 'registrar']);
+        Route::get('/usuarios', [UsuarioController::class, 'index']);
+        Route::get('/usuarios/{id}', [UsuarioController::class, 'show']);
+        Route::delete('/usuarios/{id}', [UsuarioController::class, 'eliminar']);
 
             // Listar todas las desparasitaciones
         Route::get('/desparasitaciones', [DesparasitacionController::class, 'Lista']);
