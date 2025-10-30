@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
@@ -56,6 +57,9 @@ class Mascota extends Model
         return $this->hasMany(Vacuna::class, 'id_mascota');
     }
 
+     use HasFactory;
+
+    protected $table = 'mascota';
     protected $primaryKey = 'id_mascota';
     public $timestamps = false;
 
@@ -72,3 +76,12 @@ class Mascota extends Model
     }
 }
 
+        'id_propietario'
+    ];
+
+    // Relación con Propietario
+    public function propietario()
+    {
+        return $this->belongsTo(Propietario::class, 'id_propietario', 'id_propietario');
+    }
+}
