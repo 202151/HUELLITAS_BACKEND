@@ -7,7 +7,7 @@ use Slim\Factory\AppFactory;
 
 $app = AppFactory::create();
 
-// Configuración de CORS
+
 $app->add(function (Request $request, $handler) {
     $response = $handler->handle($request);
     return $response
@@ -50,7 +50,7 @@ function getDbConnection() {
     }
 }
 
-// Función para validar datos de servicio
+
 function validarServicio($data, $esActualizacion = false) {
     $errores = [];
     
@@ -73,7 +73,7 @@ function validarServicio($data, $esActualizacion = false) {
     return $errores;
 }
 
-// Ruta raíz
+
 $app->get('/', function (Request $request, Response $response) {
     $data = ['message' => 'API Servicios Veterinaria'];
     $response->getBody()->write(json_encode($data));
