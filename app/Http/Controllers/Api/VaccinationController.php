@@ -12,7 +12,7 @@ class VaccinationController extends Controller
     public function index()
     {
         $vaccinations = Vaccination::with(['pet.owner', 'veterinarian'])
-                                  ->orderBy('vaccination_date', 'desc')
+                                  ->orderBy('application_date', 'desc')
                                   ->get();
         return response()->json($vaccinations);
     }
@@ -22,12 +22,16 @@ class VaccinationController extends Controller
         $validator = Validator::make($request->all(), [
             'pet_id' => 'required|exists:pets,id',
             'veterinarian_id' => 'required|exists:users,id',
-            'vaccine_name' => 'required|string|max:255',
-            'vaccine_type' => 'required|string|max:100',
-            'vaccination_date' => 'required|date',
-            'next_vaccination_date' => 'nullable|date|after:vaccination_date',
+            'medical_record_id' => 'nullable|exists:medical_records,id',
+            'type' => 'required|in:vacuna,desparasitacion',
+            'name' => 'required|string|max:255',
+            'brand' => 'nullable|string|max:255',
             'batch_number' => 'nullable|string|max:100',
-            'manufacturer' => 'nullable|string|max:255',
+            'application_date' => 'required|date',
+            'expiration_date' => 'nullable|date|after:application_date',
+            'next_dose_date' => 'nullable|date|after:application_date',
+            'weight_at_application' => 'nullable|numeric|min:0',
+            'adverse_reactions' => 'nullable|string',
             'notes' => 'nullable|string',
         ]);
 
@@ -53,12 +57,16 @@ class VaccinationController extends Controller
         $validator = Validator::make($request->all(), [
             'pet_id' => 'sometimes|required|exists:pets,id',
             'veterinarian_id' => 'sometimes|required|exists:users,id',
-            'vaccine_name' => 'sometimes|required|string|max:255',
-            'vaccine_type' => 'sometimes|required|string|max:100',
-            'vaccination_date' => 'sometimes|required|date',
-            'next_vaccination_date' => 'nullable|date|after:vaccination_date',
+            'medical_record_id' => 'nullable|exists:medical_records,id',
+            'type' => 'sometimes|required|in:vacuna,desparasitacion',
+            'name' => 'sometimes|required|string|max:255',
+            'brand' => 'nullable|string|max:255',
             'batch_number' => 'nullable|string|max:100',
-            'manufacturer' => 'nullable|string|max:255',
+            'application_date' => 'sometimes|required|date',
+            'expiration_date' => 'nullable|date|after:application_date',
+            'next_dose_date' => 'nullable|date|after:application_date',
+            'weight_at_application' => 'nullable|numeric|min:0',
+            'adverse_reactions' => 'nullable|string',
             'notes' => 'nullable|string',
         ]);
 
