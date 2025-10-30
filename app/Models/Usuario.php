@@ -68,3 +68,24 @@ class Usuario extends Authenticatable
     }
 }
 
+use Illuminate\Database\Eloquent\Model;
+
+class Usuario extends Model
+{
+    use HasFactory;
+
+    protected $table = 'usuario';
+    protected $primaryKey = 'id_usuario';
+    public $timestamps = false;
+
+    protected $fillable = [
+        'nombre',
+        'email',
+        'contrasenia',
+        'roll_usuario'
+    ];
+
+    protected $hidden = [
+        'contrasenia'
+    ];
+}

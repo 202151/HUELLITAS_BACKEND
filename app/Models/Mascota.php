@@ -56,6 +56,16 @@ class Mascota extends Model
         return $this->hasMany(Vacuna::class, 'id_mascota');
     }
 
+    protected $primaryKey = 'id_mascota';
+    public $timestamps = false;
+
+    protected $fillable = [
+        'nombre',
+        'raza',
+        'edad',
+        'id_propietario',
+    ];
+
     public function desparasitaciones()
     {
         return $this->hasMany(Desparasitacion::class, 'id_mascota');

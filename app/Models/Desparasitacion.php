@@ -10,6 +10,8 @@ class Desparasitacion extends Model
     use HasFactory;
 
     protected $table = 'desparasitaciones';
+    protected $primaryKey = 'id_desparasitaciones';
+    public $timestamps = false;
 
     protected $fillable = [
         'id_mascota',
@@ -25,6 +27,10 @@ class Desparasitacion extends Model
         'proxima_aplicacion' => 'date',
     ];
 
+        'creado_en'
+    ];
+
+    // Relación con Mascota
     public function mascota()
     {
         return $this->belongsTo(Mascota::class, 'id_mascota');
