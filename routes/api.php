@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\agendacitasController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\AuthController;
@@ -16,6 +17,14 @@ use App\Http\Controllers\Api\ReportController;
 use App\Http\Controllers\Api\ActivityLogController;
 use App\Http\Controllers\DesparasitacionController;
 use App\Http\Controllers\UsuarioController;
+
+
+//Api para agendar citas
+Route::post('/Agendar_cita', [agendacitasController::class, 'agendarCita']);
+//Api para obtener la lista de citas mas recientes
+Route::get(uri: '/obtener_citas', action: [agendacitasController::class, 'obtenerCitas']);
+//Api para obtener citas por filtros
+Route::get(uri: '/obtener_citas_filtos', action: [agendacitasController::class, 'obtenerCitasFiltradas']);
 
 Route::group([
     'middleware' => 'api',
