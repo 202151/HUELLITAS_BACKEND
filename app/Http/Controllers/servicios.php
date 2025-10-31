@@ -1,5 +1,6 @@
 <?php
 require 'vendor/autoload.php';
+require_once 'models/Servicio.php';
 
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
@@ -7,7 +8,7 @@ use Slim\Factory\AppFactory;
 
 $app = AppFactory::create();
 
-
+// Configuración de CORS
 $app->add(function (Request $request, $handler) {
     $response = $handler->handle($request);
     return $response
@@ -50,84 +51,131 @@ function getDbConnection() {
     }
 }
 
-
-function validarServicio($data, $esActualizacion = false) {
-    $errores = [];
-    
-    if (empty($data['nombre_servicio']) || strlen($data['nombre_servicio']) > 100) {
-        $errores[] = "El nombre del servicio es requerido y debe tener máximo 100 caracteres";
-    }
-    
-    if (!isset($data['precio']) || $data['precio'] <= 0) {
-        $errores[] = "El precio es requerido y debe ser mayor a 0";
-    }
-    
-    if (!in_array($data['categoria'], ['consulta', 'vacuna', 'baño', 'grooming'])) {
-        $errores[] = "La categoría debe ser: consulta, vacuna, baño o grooming";
-    }
-    
-    if (isset($data['duracion_estimada']) && $data['duracion_estimada'] <= 0) {
-        $errores[] = "La duración estimada debe ser mayor a 0";
-    }
-    
-    return $errores;
+// Función helper para respuestas JSON
+function jsonResponse(Response $response, $data, $status = 200) {
+    $response->getBody()->write(json_encode($data, JSON_UNESCAPED_UNICODE));
+    return $response
+        ->withHeader('Content-Type', 'application/json; charset=utf-8')
+        ->withStatus($status);
 }
 
+// ==================== RUTAS ====================
 
+// Ruta raíz
 $app->get('/', function (Request $request, Response $response) {
-    $data = ['message' => 'API Servicios Veterinaria'];
-    $response->getBody()->write(json_encode($data));
-    return $response->withHeader('Content-Type', 'application/json');
+    return jsonResponse($response, [
+        'message' => 'API Servicios Veterinaria',
+        'version' => '1.0',
+        'endpoints' => [
+            'GET /api/servicios' => 'Listar todos los servicios',
+            'GET /api/servicios/{id}' => 'Obtener un servicio',
+            'POST /api/servicios' => 'Crear un servicio',
+            'PUT /api/servicios/{id}' => 'Actualizar un servicio',
+            'DELETE /api/servicios/{id}' => 'Eliminar un servicio',
+            'GET /api/servicios/categoria/{categoria}' => 'Servicios por categoría',
+            'GET /api/servicios/estadisticas' => 'Estadísticas generales'
+        ]
+    ]);
 });
 
 // GET - Listar todos los servicios
 $app->get('/api/servicios', function (Request $request, Response $response) {
     try {
         $db = getDbConnection();
-        $stmt = $db->query("
-            SELECT id_servicios, nombre_servicio, descripcion, precio, 
-                   duracion_estimada, categoria, activo, creado_en
-            FROM servicios
-            ORDER BY creado_en DESC
-        ");
-        $servicios = $stmt->fetchAll();
+        $servicio = new Servicio($db);
         
-        $response->getBody()->write(json_encode($servicios));
-        return $response->withHeader('Content-Type', 'application/json');
+        // Obtener parámetros query opcional
+        $params = $request->getQueryParams();
+        $soloActivos = isset($params['activos']) && $params['activos'] === 'true';
+        
+        $servicios = $servicio->obtenerTodos($soloActivos);
+        return jsonResponse($response, $servicios);
     } catch (Exception $e) {
-        $error = ['error' => 'Error al obtener servicios: ' . $e->getMessage()];
-        $response->getBody()->write(json_encode($error));
-        return $response->withHeader('Content-Type', 'application/json')->withStatus(500);
+        return jsonResponse($response, [
+            'error' => 'Error al obtener servicios',
+            'mensaje' => $e->getMessage()
+        ], 500);
     }
 });
 
 // GET - Obtener un servicio por ID
 $app->get('/api/servicios/{id}', function (Request $request, Response $response, array $args) {
     try {
-        $id = $args['id'];
+        $id = (int)$args['id'];
         $db = getDbConnection();
+        $servicio = new Servicio($db);
         
-        $stmt = $db->prepare("
-            SELECT id_servicios, nombre_servicio, descripcion, precio, 
-                   duracion_estimada, categoria, activo, creado_en
-            FROM servicios
-            WHERE id_servicios = ?
-        ");
-        $stmt->execute([$id]);
-        $servicio = $stmt->fetch();
+        $resultado = $servicio->obtenerPorId($id);
         
-        if (!$servicio) {
-            $error = ['error' => 'Servicio no encontrado'];
-            $response->getBody()->write(json_encode($error));
-            return $response->withHeader('Content-Type', 'application/json')->withStatus(404);
+        if (!$resultado) {
+            return jsonResponse($response, [
+                'error' => 'Servicio no encontrado'
+            ], 404);
         }
         
-        $response->getBody()->write(json_encode($servicio));
-        return $response->withHeader('Content-Type', 'application/json');
+        return jsonResponse($response, $resultado);
     } catch (Exception $e) {
-        $error = ['error' => 'Error al obtener servicio: ' . $e->getMessage()];
-        $response->getBody()->write(json_encode($error));
-        return $response->withHeader('Content-Type', 'application/json')->withStatus(500);
+        return jsonResponse($response, [
+            'error' => 'Error al obtener servicio',
+            'mensaje' => $e->getMessage()
+        ], 500);
+    }
+});
+
+// GET - Obtener servicios por categoría
+$app->get('/api/servicios/categoria/{categoria}', function (Request $request, Response $response, array $args) {
+    try {
+        $categoria = $args['categoria'];
+        $db = getDbConnection();
+        $servicio = new Servicio($db);
+        
+        $servicios = $servicio->obtenerPorCategoria($categoria);
+        return jsonResponse($response, $servicios);
+    } catch (Exception $e) {
+        return jsonResponse($response, [
+            'error' => 'Error al obtener servicios por categoría',
+            'mensaje' => $e->getMessage()
+        ], 500);
+    }
+});
+
+// GET - Buscar servicios
+$app->get('/api/servicios/buscar/{termino}', function (Request $request, Response $response, array $args) {
+    try {
+        $termino = $args['termino'];
+        $db = getDbConnection();
+        $servicio = new Servicio($db);
+        
+        $servicios = $servicio->buscar($termino);
+        return jsonResponse($response, $servicios);
+    } catch (Exception $e) {
+        return jsonResponse($response, [
+            'error' => 'Error al buscar servicios',
+            'mensaje' => $e->getMessage()
+        ], 500);
+    }
+});
+
+// GET - Obtener estadísticas
+$app->get('/api/servicios/stats/general', function (Request $request, Response $response) {
+    try {
+        $db = getDbConnection();
+        $servicio = new Servicio($db);
+        
+        $estadisticas = $servicio->obtenerEstadisticas();
+        $porCategoria = $servicio->contarPorCategoria();
+        $masCaros = $servicio->obtenerMasCaros(5);
+        
+        return jsonResponse($response, [
+            'generales' => $estadisticas,
+            'por_categoria' => $porCategoria,
+            'mas_caros' => $masCaros
+        ]);
+    } catch (Exception $e) {
+        return jsonResponse($response, [
+            'error' => 'Error al obtener estadísticas',
+            'mensaje' => $e->getMessage()
+        ], 500);
     }
 });
 
@@ -135,148 +183,166 @@ $app->get('/api/servicios/{id}', function (Request $request, Response $response,
 $app->post('/api/servicios', function (Request $request, Response $response) {
     try {
         $data = $request->getParsedBody();
+        $db = getDbConnection();
+        $servicio = new Servicio($db);
+        
+        // Asignar propiedades
+        $servicio->nombre_servicio = $data['nombre_servicio'] ?? '';
+        $servicio->descripcion = $data['descripcion'] ?? null;
+        $servicio->precio = $data['precio'] ?? 0;
+        $servicio->duracion_estimada = $data['duracion_estimada'] ?? null;
+        $servicio->categoria = $data['categoria'] ?? '';
+        $servicio->activo = isset($data['activo']) ? (bool)$data['activo'] : true;
         
         // Validar datos
-        $errores = validarServicio($data);
+        $errores = $servicio->validar();
         if (!empty($errores)) {
-            $error = ['error' => 'Datos inválidos', 'detalles' => $errores];
-            $response->getBody()->write(json_encode($error));
-            return $response->withHeader('Content-Type', 'application/json')->withStatus(400);
+            return jsonResponse($response, [
+                'error' => 'Datos inválidos',
+                'detalles' => $errores
+            ], 400);
         }
         
-        $db = getDbConnection();
+        // Crear servicio
+        $id_nuevo = $servicio->crear();
         
-        $stmt = $db->prepare("
-            INSERT INTO servicios (nombre_servicio, descripcion, precio, 
-                                 duracion_estimada, categoria, activo)
-            VALUES (?, ?, ?, ?, ?, ?)
-        ");
-        
-        $activo = isset($data['activo']) ? (bool)$data['activo'] : true;
-        
-        $stmt->execute([
-            $data['nombre_servicio'],
-            $data['descripcion'] ?? null,
-            $data['precio'],
-            $data['duracion_estimada'] ?? null,
-            $data['categoria'],
-            $activo
-        ]);
-        
-        // Obtener el servicio recién creado
-        $id_nuevo = $db->lastInsertId();
-        $stmt = $db->prepare("
-            SELECT id_servicios, nombre_servicio, descripcion, precio, 
-                   duracion_estimada, categoria, activo, creado_en
-            FROM servicios
-            WHERE id_servicios = ?
-        ");
-        $stmt->execute([$id_nuevo]);
-        $nuevo_servicio = $stmt->fetch();
-        
-        $response->getBody()->write(json_encode($nuevo_servicio));
-        return $response->withHeader('Content-Type', 'application/json')->withStatus(201);
+        if ($id_nuevo) {
+            $nuevo_servicio = $servicio->obtenerPorId($id_nuevo);
+            return jsonResponse($response, $nuevo_servicio, 201);
+        } else {
+            return jsonResponse($response, [
+                'error' => 'No se pudo crear el servicio'
+            ], 500);
+        }
     } catch (Exception $e) {
-        $error = ['error' => 'Error al crear servicio: ' . $e->getMessage()];
-        $response->getBody()->write(json_encode($error));
-        return $response->withHeader('Content-Type', 'application/json')->withStatus(500);
+        return jsonResponse($response, [
+            'error' => 'Error al crear servicio',
+            'mensaje' => $e->getMessage()
+        ], 500);
     }
 });
 
 // PUT - Actualizar un servicio
 $app->put('/api/servicios/{id}', function (Request $request, Response $response, array $args) {
     try {
-        $id = $args['id'];
+        $id = (int)$args['id'];
         $data = $request->getParsedBody();
-        
-        // Validar datos
-        $errores = validarServicio($data, true);
-        if (!empty($errores)) {
-            $error = ['error' => 'Datos inválidos', 'detalles' => $errores];
-            $response->getBody()->write(json_encode($error));
-            return $response->withHeader('Content-Type', 'application/json')->withStatus(400);
-        }
-        
         $db = getDbConnection();
+        $servicio = new Servicio($db);
         
         // Verificar si existe
-        $stmt = $db->prepare("SELECT id_servicios FROM servicios WHERE id_servicios = ?");
-        $stmt->execute([$id]);
-        if (!$stmt->fetch()) {
-            $error = ['error' => 'Servicio no encontrado'];
-            $response->getBody()->write(json_encode($error));
-            return $response->withHeader('Content-Type', 'application/json')->withStatus(404);
+        if (!$servicio->existe($id)) {
+            return jsonResponse($response, [
+                'error' => 'Servicio no encontrado'
+            ], 404);
         }
         
-        // Actualizar
-        $stmt = $db->prepare("
-            UPDATE servicios
-            SET nombre_servicio = ?,
-                descripcion = ?,
-                precio = ?,
-                duracion_estimada = ?,
-                categoria = ?,
-                activo = ?
-            WHERE id_servicios = ?
-        ");
+        // Asignar propiedades
+        $servicio->id_servicios = $id;
+        $servicio->nombre_servicio = $data['nombre_servicio'] ?? '';
+        $servicio->descripcion = $data['descripcion'] ?? null;
+        $servicio->precio = $data['precio'] ?? 0;
+        $servicio->duracion_estimada = $data['duracion_estimada'] ?? null;
+        $servicio->categoria = $data['categoria'] ?? '';
+        $servicio->activo = isset($data['activo']) ? (bool)$data['activo'] : true;
         
-        $activo = isset($data['activo']) ? (bool)$data['activo'] : true;
+        // Validar datos
+        $errores = $servicio->validar();
+        if (!empty($errores)) {
+            return jsonResponse($response, [
+                'error' => 'Datos inválidos',
+                'detalles' => $errores
+            ], 400);
+        }
         
-        $stmt->execute([
-            $data['nombre_servicio'],
-            $data['descripcion'] ?? null,
-            $data['precio'],
-            $data['duracion_estimada'] ?? null,
-            $data['categoria'],
-            $activo,
-            $id
-        ]);
-        
-        // Obtener el servicio actualizado
-        $stmt = $db->prepare("
-            SELECT id_servicios, nombre_servicio, descripcion, precio, 
-                   duracion_estimada, categoria, activo, creado_en
-            FROM servicios
-            WHERE id_servicios = ?
-        ");
-        $stmt->execute([$id]);
-        $servicio_actualizado = $stmt->fetch();
-        
-        $response->getBody()->write(json_encode($servicio_actualizado));
-        return $response->withHeader('Content-Type', 'application/json');
+        // Actualizar servicio
+        if ($servicio->actualizar()) {
+            $servicio_actualizado = $servicio->obtenerPorId($id);
+            return jsonResponse($response, $servicio_actualizado);
+        } else {
+            return jsonResponse($response, [
+                'error' => 'No se pudo actualizar el servicio'
+            ], 500);
+        }
     } catch (Exception $e) {
-        $error = ['error' => 'Error al actualizar servicio: ' . $e->getMessage()];
-        $response->getBody()->write(json_encode($error));
-        return $response->withHeader('Content-Type', 'application/json')->withStatus(500);
+        return jsonResponse($response, [
+            'error' => 'Error al actualizar servicio',
+            'mensaje' => $e->getMessage()
+        ], 500);
     }
 });
 
 // DELETE - Eliminar un servicio
 $app->delete('/api/servicios/{id}', function (Request $request, Response $response, array $args) {
     try {
-        $id = $args['id'];
+        $id = (int)$args['id'];
         $db = getDbConnection();
+        $servicio = new Servicio($db);
         
         // Verificar si existe
-        $stmt = $db->prepare("SELECT id_servicios FROM servicios WHERE id_servicios = ?");
-        $stmt->execute([$id]);
-        if (!$stmt->fetch()) {
-            $error = ['error' => 'Servicio no encontrado'];
-            $response->getBody()->write(json_encode($error));
-            return $response->withHeader('Content-Type', 'application/json')->withStatus(404);
+        if (!$servicio->existe($id)) {
+            return jsonResponse($response, [
+                'error' => 'Servicio no encontrado'
+            ], 404);
         }
         
-        // Eliminar
-        $stmt = $db->prepare("DELETE FROM servicios WHERE id_servicios = ?");
-        $stmt->execute([$id]);
+        // Eliminar servicio
+        $servicio->id_servicios = $id;
         
-        $data = ['message' => 'Servicio eliminado correctamente'];
-        $response->getBody()->write(json_encode($data));
-        return $response->withHeader('Content-Type', 'application/json');
+        if ($servicio->eliminar()) {
+            return jsonResponse($response, [
+                'message' => 'Servicio eliminado correctamente'
+            ]);
+        } else {
+            return jsonResponse($response, [
+                'error' => 'No se pudo eliminar el servicio'
+            ], 500);
+        }
     } catch (Exception $e) {
-        $error = ['error' => 'Error al eliminar servicio: ' . $e->getMessage()];
-        $response->getBody()->write(json_encode($error));
-        return $response->withHeader('Content-Type', 'application/json')->withStatus(500);
+        return jsonResponse($response, [
+            'error' => 'Error al eliminar servicio',
+            'mensaje' => $e->getMessage()
+        ], 500);
+    }
+});
+
+// PATCH - Desactivar/Activar servicio
+$app->patch('/api/servicios/{id}/toggle', function (Request $request, Response $response, array $args) {
+    try {
+        $id = (int)$args['id'];
+        $data = $request->getParsedBody();
+        $db = getDbConnection();
+        $servicio = new Servicio($db);
+        
+        // Verificar si existe
+        if (!$servicio->existe($id)) {
+            return jsonResponse($response, [
+                'error' => 'Servicio no encontrado'
+            ], 404);
+        }
+        
+        $servicio->id_servicios = $id;
+        $activar = isset($data['activo']) ? (bool)$data['activo'] : true;
+        
+        if ($activar) {
+            $resultado = $servicio->activar();
+        } else {
+            $resultado = $servicio->desactivar();
+        }
+        
+        if ($resultado) {
+            $servicio_actualizado = $servicio->obtenerPorId($id);
+            return jsonResponse($response, $servicio_actualizado);
+        } else {
+            return jsonResponse($response, [
+                'error' => 'No se pudo actualizar el estado del servicio'
+            ], 500);
+        }
+    } catch (Exception $e) {
+        return jsonResponse($response, [
+            'error' => 'Error al cambiar estado del servicio',
+            'mensaje' => $e->getMessage()
+        ], 500);
     }
 });
 
