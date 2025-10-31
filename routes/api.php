@@ -14,6 +14,7 @@ use App\Http\Controllers\Api\ActivityLogController;
 use App\Http\Controllers\MascotasController;
 use App\Http\Controllers\VacunaController;
 
+
 Route::group([
     'middleware' => 'api',
     'prefix' => 'auth'
@@ -97,3 +98,7 @@ Route::prefix('vacunas')->group(function () {
     // POST /api/vacunas/1/aplicar-dosis
     
 });
+
+use App\Http\Controllers\PdfCitasController;
+
+Route::get('/pdf/cita-veterinaria/{id}', [PdfCitasController::class, 'reporteCitaVeterinaria'])->name('pdf.cita.veterinaria');
