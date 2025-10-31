@@ -12,6 +12,8 @@ use App\Http\Controllers\Api\VaccinationController;
 use App\Http\Controllers\Api\ReportController;
 use App\Http\Controllers\Api\ActivityLogController;
 
+use App\Http\Controllers\Api\servicios;
+
 Route::group([
     'middleware' => 'api',
     'prefix' => 'auth'
@@ -30,6 +32,8 @@ Route::middleware(['auth:api', 'log.activity'])->group(function () {
     Route::apiResource('appointments', AppointmentController::class);
     Route::apiResource('medical-records', MedicalRecordController::class);
     Route::apiResource('vaccinations', VaccinationController::class);
+
+    Route::apiResource('servicios', servicios::class);
     
     // Rutas para reportes
     Route::prefix('reports')->group(function () {
