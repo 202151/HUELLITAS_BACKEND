@@ -2,7 +2,6 @@
 
 namespace Database\Seeders;
 
-use App\Models\User;
 // use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
@@ -13,13 +12,19 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
+        // Seeder unificado con todos los datos de prueba en español
         $this->call([
-            RoleSeeder::class,
-            UserSeeder::class,
-            ServiceSeeder::class,
-            OwnerSeeder::class,
-            PetSeeder::class,
-            AppointmentSeeder::class,
+            DatosPruebaSeeder::class,
         ]);
+
+        // Seeders individuales anteriores (comentados - usar solo DatosPruebaSeeder)
+        // $this->call([
+        //     RoleSeeder::class,
+        //     UserSeeder::class,
+        //     ServiceSeeder::class,
+        //     OwnerSeeder::class,
+        //     PetSeeder::class,
+        //     AppointmentSeeder::class,
+        // ]);
     }
 }

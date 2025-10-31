@@ -4,12 +4,9 @@ use App\Http\Controllers\agendacitasController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\AuthController;
-<<<<<<< HEAD
 use App\Http\Controllers\Api\PropietarioController;
 use App\Http\Controllers\Api\FichaClinicaController;
 use App\Http\Controllers\Api\ReporteController;
-=======
->>>>>>> origin/main
 use App\Http\Controllers\Api\OwnerController;
 use App\Http\Controllers\Api\PetController;
 use App\Http\Controllers\Api\ServiceController;
@@ -18,10 +15,10 @@ use App\Http\Controllers\Api\MedicalRecordController;
 use App\Http\Controllers\Api\VaccinationController;
 use App\Http\Controllers\Api\ReportController;
 use App\Http\Controllers\Api\ActivityLogController;
-<<<<<<< HEAD
 use App\Http\Controllers\DesparasitacionController;
 use App\Http\Controllers\UsuarioController;
-
+use App\Http\Controllers\MascotasController;
+use App\Http\Controllers\VacunaController;
 
 //Api para agendar citas
 Route::post('/Agendar_cita', [agendacitasController::class, 'agendarCita']);
@@ -29,10 +26,6 @@ Route::post('/Agendar_cita', [agendacitasController::class, 'agendarCita']);
 Route::get(uri: '/obtener_citas', action: [agendacitasController::class, 'obtenerCitas']);
 //Api para obtener citas por filtros
 Route::get(uri: '/obtener_citas_filtos', action: [agendacitasController::class, 'obtenerCitasFiltradas']);
-use App\Http\Controllers\MascotasController;
-use App\Http\Controllers\VacunaController;
-=======
->>>>>>> origin/main
 
 Route::group([
     'middleware' => 'api',
@@ -68,34 +61,24 @@ Route::middleware(['auth:api', 'log.activity'])->group(function () {
     
     Route::get('/user', function (Request $request) {
         return $request->user();
-        //login
-    
-        Route::post('/login', [UsuarioController::class, 'login']);
-        Route::post('/registrar', [UsuarioController::class, 'registrar']);
-        Route::get('/usuarios', [UsuarioController::class, 'index']);
-        Route::get('/usuarios/{id}', [UsuarioController::class, 'show']);
-        Route::delete('/usuarios/{id}', [UsuarioController::class, 'eliminar']);
-
-            // Listar todas las desparasitaciones
-        Route::get('/desparasitaciones', [DesparasitacionController::class, 'Lista']);
-
-        // Mostrar una sola desparasitación por ID
-        Route::get('/desparasitaciones/{id}', [DesparasitacionController::class, 'Muestra']);
-
-        // Crear una nueva desparasitación
-        Route::post('/desparasitaciones', [DesparasitacionController::class, 'Crear']);
-
-        // Actualizar un registro existente
-        Route::put('/desparasitaciones/{id}', [DesparasitacionController::class, 'Actualizar']);
-
-        // Eliminar un registro
-        Route::post('/desparasitaciones/eliminar/{id}', [DesparasitacionController::class, 'Eliminar']);
-
     });
-<<<<<<< HEAD
+
+    // Rutas de usuarios
+    Route::post('/login', [UsuarioController::class, 'login']);
+    Route::post('/registrar', [UsuarioController::class, 'registrar']);
+    Route::get('/usuarios', [UsuarioController::class, 'index']);
+    Route::get('/usuarios/{id}', [UsuarioController::class, 'show']);
+    Route::delete('/usuarios/{id}', [UsuarioController::class, 'eliminar']);
+
+    // Rutas de desparasitación
+    Route::get('/desparasitaciones', [DesparasitacionController::class, 'Lista']);
+    Route::get('/desparasitaciones/{id}', [DesparasitacionController::class, 'Muestra']);
+    Route::post('/desparasitaciones', [DesparasitacionController::class, 'Crear']);
+    Route::put('/desparasitaciones/{id}', [DesparasitacionController::class, 'Actualizar']);
+    Route::post('/desparasitaciones/eliminar/{id}', [DesparasitacionController::class, 'Eliminar']);
 });
 
-//rutas para el crud de mascotas 
+// Rutas para el crud de mascotas (sin middleware de auth para acceso público)
 Route::prefix('mascotas')->group(function () {
     Route::get('/', [MascotasController::class, 'index']); 
     Route::post('/', [MascotasController::class, 'store']);
@@ -104,43 +87,25 @@ Route::prefix('mascotas')->group(function () {
     Route::delete('/{id}', [MascotasController::class, 'destroy']);
 });
 
-//rutas para el crud de vacunas
-
+// Rutas para el crud de vacunas
 Route::prefix('vacunas')->group(function () {
-    
     // Estadísticas generales
     Route::get('estadisticas', [VacunaController::class, 'estadisticas']);
-    // GET /api/vacunas/estadisticas
     // Vacunas próximas a vencer
     Route::get('proximas', [VacunaController::class, 'proximasAVencer']);
-    // GET /api/vacunas/proximas
     // Vacunas vencidas
     Route::get('vencidas', [VacunaController::class, 'vencidas']);
-    // GET /api/vacunas/vencidas
     // Historial de vacunas por mascota
     Route::get('mascota/{idMascota}', [VacunaController::class, 'historialMascota']);
-    // GET /api/vacunas/mascota/1
     
-    // Listar todas las vacunas (con filtros opcionales)
+    // CRUD básico
     Route::get('/', [VacunaController::class, 'index']);
-    // Crear nueva vacuna
     Route::post('/', [VacunaController::class, 'store']);
-    // POST /api/vacunas
-    // Ver una vacuna específica
     Route::get('/{id}', [VacunaController::class, 'show']);
-    // GET /api/vacunas/1
-    // Actualizar vacuna
     Route::put('/{id}', [VacunaController::class, 'update']);
-    // PUT /api/vacunas/1
     Route::patch('/{id}', [VacunaController::class, 'update']);
-    // PATCH /api/vacunas/1
-    // Eliminar vacuna
     Route::delete('/{id}', [VacunaController::class, 'destroy']);
-    // DELETE /api/vacunas/1
-    Route::post('/{id}/aplicar-dosis', [VacunaController::class, 'aplicarProximaDosis']);
-    // POST /api/vacunas/1/aplicar-dosis
     
+    // Aplicar próxima dosis
+    Route::post('/{id}/aplicar-dosis', [VacunaController::class, 'aplicarProximaDosis']);
 });
-=======
-});
->>>>>>> origin/main
