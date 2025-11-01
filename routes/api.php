@@ -101,4 +101,5 @@ Route::prefix('vacunas')->group(function () {
 
 use App\Http\Controllers\PdfCitasController;
 
-Route::get('/pdf/cita-veterinaria/{id}', [PdfCitasController::class, 'reporteCitaVeterinaria'])->name('pdf.cita.veterinaria');
+Route::get('/reporteCitas', [PdfCitasController::class, 'reporteCitas']);
+  
