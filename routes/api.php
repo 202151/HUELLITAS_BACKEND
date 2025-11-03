@@ -110,15 +110,11 @@ Route::prefix('vacunas')->group(function () {
     Route::patch('/{id}', [VacunaController::class, 'update']);
     Route::delete('/{id}', [VacunaController::class, 'destroy']);
     
-<<<<<<< HEAD
     // Aplicar próxima dosis
     Route::post('/{id}/aplicar-dosis', [VacunaController::class, 'aplicarProximaDosis']);
-});
-=======
 });
 
 use App\Http\Controllers\PdfCitasController;
 
 Route::get('/reporteCitas', [PdfCitasController::class, 'reporteCitas']);
   
->>>>>>> origin/Elva_Rama
