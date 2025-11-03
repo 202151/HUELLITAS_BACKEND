@@ -27,6 +27,8 @@ Route::get(uri: '/obtener_citas', action: [agendacitasController::class, 'obtene
 //Api para obtener citas por filtros
 Route::get(uri: '/obtener_citas_filtos', action: [agendacitasController::class, 'obtenerCitasFiltradas']);
 
+use App\Http\Controllers\Api\servicios;
+
 Route::group([
     'middleware' => 'api',
     'prefix' => 'auth'
@@ -45,6 +47,8 @@ Route::middleware(['auth:api', 'log.activity'])->group(function () {
     Route::apiResource('appointments', AppointmentController::class);
     Route::apiResource('medical-records', MedicalRecordController::class);
     Route::apiResource('vaccinations', VaccinationController::class);
+
+    Route::apiResource('servicios', servicios::class);
     
     // Rutas para reportes
     Route::prefix('reports')->group(function () {
