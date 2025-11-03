@@ -6,8 +6,9 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
+use Tymon\JWTAuth\Contracts\JWTSubject;
 
-class Usuario extends Authenticatable
+class Usuario extends Authenticatable implements JWTSubject
 {
     use HasApiTokens, HasFactory, Notifiable;
 
@@ -32,9 +33,28 @@ class Usuario extends Authenticatable
         'activo' => 'boolean',
     ];
 
+    /**
+     * Get the password for the user.
+     */
     public function getAuthPassword()
     {
         return $this->contrasenia;
+    }
+
+    /**
+     * Get the name of the unique identifier for the user.
+     */
+    public function getAuthIdentifierName()
+    {
+        return 'correo';
+    }
+
+    /**
+     * Get the column name for the "remember me" token.
+     */
+    public function getRememberTokenName()
+    {
+        return 'remember_token';
     }
 
     public function rol()
@@ -66,26 +86,15 @@ class Usuario extends Authenticatable
     {
         return $this->hasMany(RegistroActividad::class, 'usuario_id');
     }
-}
 
-use Illuminate\Database\Eloquent\Model;
+    // JWT Methods
+    public function getJWTIdentifier()
+    {
+        return $this->getKey();
+    }
 
-class Usuario extends Model
-{
-    use HasFactory;
-
-    protected $table = 'usuario';
-    protected $primaryKey = 'id_usuario';
-    public $timestamps = false;
-
-    protected $fillable = [
-        'nombre',
-        'email',
-        'contrasenia',
-        'roll_usuario'
-    ];
-
-    protected $hidden = [
-        'contrasenia'
-    ];
+    public function getJWTCustomClaims()
+    {
+        return [];
+    }
 }

@@ -22,19 +22,8 @@ class Vacuna extends Model
         'fecha_aplicacion',
         'fecha_expiracion',
         'fecha_proxima_dosis',
-        'observaciones',
         'peso_aplicacion',
         'reacciones_adversas',
-    protected $primaryKey = 'id_vacuna';
-    
-    const CREATED_AT = 'creado_en';
-    const UPDATED_AT = null; // No hay updated_at en la tabla
-
-    protected $fillable = [
-        'id_mascota',
-        'nombre_vacuna',
-        'fecha_aplicacion',
-        'proxima_dosis',
         'observaciones',
     ];
 
@@ -59,32 +48,23 @@ class Vacuna extends Model
     {
         return $this->belongsTo(FichaClinica::class, 'id_ficha_clinica');
     }
-}
-
-        'proxima_dosis' => 'date',
-        'creado_en' => 'datetime',
-    ];
-
-    protected $hidden = [
-        'created_at',
-        'updated_at'
-    ];
-
-    /**
-     * Relación con Mascota
-     */
-    public function mascota()
-    {
-        return $this->belongsTo(Mascota::class, 'id_mascota', 'id_mascota');
-    }
 
     /**
      * Scope para vacunas próximas a vencer
      */
     public function scopeProximasAVencer($query, $dias = 30)
     {
-        return $query->whereNotNull('proxima_dosis')
-                     ->whereBetween('proxima_dosis', [now(), now()->addDays($dias)]);
+        return $query->whereNotNull('fecha_proxima_dosis')
+                     ->whereBetween('fecha_proxima_dosis', [now(), now()->addDays($dias)]);
+    }
+
+    /**
+     * Scope para vacunas vencidas
+     */
+    public function scopeVencidas($query)
+    {
+        return $query->whereNotNull('fecha_expiracion')
+                     ->where('fecha_expiracion', '<', now());
     }
 
     /**
